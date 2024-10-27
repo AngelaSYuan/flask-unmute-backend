@@ -7,7 +7,13 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes!
+CORS(
+    app,
+    resources={
+        r"/*": {"origins": "http://localhost:8000", "supports_credentials": True}
+    },
+)
+# CORS(app)  # Enable CORS for all routes!
  
 
 # Define your Symphonic Labs API key here or load it from environment variables
@@ -45,7 +51,7 @@ def transcribe():
 @app.route("/api/convert-to-mp4", methods=["POST"])
 def convert_to_mp4():
     if "video" not in request.files:
-        return "No video file", 400
+        return jsonify({"error": "No video file uploaded"}), 400
 
     video = request.files["video"]
 
@@ -56,7 +62,7 @@ def convert_to_mp4():
     temp_output_path = temp_input_path.replace(".webm", ".mp4")
 
     try:
-        subprocess.run(
+        result = subprocess.run(
             [
                 "ffmpeg",
                 "-i",
@@ -68,17 +74,19 @@ def convert_to_mp4():
                 temp_output_path,
             ],
             check=True,
+            capture_output=True,
         )
-
         return send_file(
             temp_output_path, as_attachment=True, download_name="converted_video.mp4"
         )
     except subprocess.CalledProcessError as e:
-        return "Conversion failed"
+        print(f"FFmpeg error: {e.stderr.decode()}")
+        return jsonify({"error": "Conversion failed", "details": e.stderr.decode()}), 500
     finally:
         os.unlink(temp_input_path)
         if os.path.exists(temp_output_path):
             os.unlink(temp_output_path)
+
 
 if __name__ == "__main__":
     app.run()
