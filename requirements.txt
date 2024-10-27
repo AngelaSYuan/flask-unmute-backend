@@ -1,4 +1,4 @@
-Flask==2.2.3  # An example of a version compatible with Werkzeug 2.2.2
+Flask==3.0.3
 Flask-Cors==3.0.10
 requests==2.28.1
-werkzeug==2.2.2
+Werkzeug>=2.3.0  # Update to a compatible version
