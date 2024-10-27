@@ -5,6 +5,9 @@ import subprocess
 import requests
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS  # Import CORS
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(
@@ -17,7 +20,7 @@ CORS(
  
 
 # Define your Symphonic Labs API key here or load it from environment variables
-API_KEY = os.getenv("API_KEY")  # Ensure this is set in your environment
+# API_KEY = os.getenv("API_KEY")  # Ensure this is set in your environment
 
 
 @app.route("/", methods=["GET"])
@@ -27,6 +30,8 @@ def root():
 
 @app.route("/api/transcribe", methods=["POST"])
 def transcribe():
+    print("hi")
+    API_KEY = os.getenv("API_KEY")
     if "video" not in request.files:
         return jsonify({"error": "No video file uploaded"}), 400
 
@@ -34,10 +39,11 @@ def transcribe():
     video = io.BytesIO(video_file.read())
 
     try:
+        print(API_KEY)
         url = "https://api.symphoniclabs.com/transcribe"
         files = {
             "video": ("input.webm", video, "video/webm"),
-            "api_key": API_KEY,
+            'api_key': (None, API_KEY),
         }
         response = requests.post(url, files=files)
         response.raise_for_status()
@@ -50,6 +56,7 @@ def transcribe():
 
 @app.route("/api/convert-to-mp4", methods=["POST"])
 def convert_to_mp4():
+    print("hello mp4")
     if "video" not in request.files:
         return jsonify({"error": "No video file uploaded"}), 400
 
@@ -88,5 +95,5 @@ def convert_to_mp4():
             os.unlink(temp_output_path)
 
 
-if __name__ == "__main__":
-    app.run()
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
