@@ -45,7 +45,7 @@ def transcribe():
             "video": ("input.webm", video, "video/webm"),
             'api_key': (None, API_KEY),
         }
-        response = requests.post(url, files=files)
+        response = requests.post(url, files=files, timeout=300)
         response.raise_for_status()
         transcribed_text = response.json().get("transcription", "")
         return jsonify({"transcription": transcribed_text})
