@@ -45,13 +45,17 @@ def transcribe():
             "video": ("input.webm", video, "video/webm"),
             'api_key': (None, API_KEY),
         }
-        response = requests.post(url, files=files, timeout=300)
-        response.raise_for_status()
+        response = requests.post(url, files=files, timeout=30)  # Reasonable timeout
+        response.raise_for_status()  # Raise an error for bad responses
         transcribed_text = response.json().get("transcription", "")
         return jsonify({"transcription": transcribed_text})
+    except requests.exceptions.Timeout:
+        print("Request timed out")
+        return jsonify({"error": "Request to Symphonic Labs API timed out"}), 504
     except requests.exceptions.RequestException as e:
-        print("Error calling Symphonic Labs API:")
+        print(f"Error calling Symphonic Labs API: {e}")
         return jsonify({"error": "Failed to transcribe video"}), 500
+
 
 
 @app.route("/api/convert-to-mp4", methods=["POST"])
