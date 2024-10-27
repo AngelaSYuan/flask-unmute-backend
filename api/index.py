@@ -30,47 +30,33 @@ def root():
 
 @app.route("/api/transcribe", methods=["POST"])
 def transcribe():
-    print("Transcription request received.")
-    
+    print("hi")
     API_KEY = os.getenv("API_KEY")
     if "video" not in request.files:
         return jsonify({"error": "No video file uploaded"}), 400
 
     video_file = request.files["video"]
-    
-    # Print the content type of the uploaded video file
+    # Debug: Inspect the uploaded file
+    print(f"Uploaded video file name: {video_file.filename}")
     print(f"Uploaded video content type: {video_file.content_type}")
-
-    # Create an in-memory bytes buffer for the video file
-    video = io.BytesIO(video_file.read())
     
-    # Automatically determine the filename and content type
-    filename = video_file.filename
-    mime_type = video_file.content_type
+    video = io.BytesIO(video_file.read())
 
     try:
-        print(f"Using API Key: {API_KEY}")
+        print(API_KEY)
         url = "https://api.symphoniclabs.com/transcribe"
         files = {
-            'video': (filename, video, mime_type),  # Use the actual filename and MIME type
+            'video': ("input.webm", video, "video/webm"),
             'tier': "fast",
             'api_key': (None, API_KEY),
         }
         response = requests.post(url, files=files, timeout=300)
         response.raise_for_status()
-        
-        # Get the transcribed text from the response
         transcribed_text = response.json()
-        
-        # Log the transcription result
-        print(f"Transcription result: {transcribed_text}")
-        
         return jsonify({"transcription": transcribed_text})
     except requests.exceptions.RequestException as e:
         print("Error calling Symphonic Labs API:")
-        print(e)
         return jsonify({"error": "Failed to transcribe video"}), 500
-
 
 
 @app.route("/api/convert-to-mp4", methods=["POST"])
