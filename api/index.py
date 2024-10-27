@@ -8,7 +8,13 @@ from flask import Flask, request, jsonify, send_file
 app = Flask(__name__)
 
 # Define your Symphonic Labs API key here or load it from environment variables
-API_KEY = os.getenv("SYMPHONIC_API_KEY")  # Ensure this is set in your environment
+API_KEY = os.getenv("API_KEY")  # Ensure this is set in your environment
+
+
+@app.route("/", methods=["GET"])
+def root():
+    return "Hello World"
+
 
 @app.route("/api/transcribe", methods=["POST"])
 def transcribe():
@@ -22,7 +28,7 @@ def transcribe():
         url = "https://api.symphoniclabs.com/transcribe"
         files = {
             "video": ("input.webm", video, "video/webm"),
-            "api_key": (None, API_KEY),
+            "api_key": API_KEY,
         }
         response = requests.post(url, files=files)
         response.raise_for_status()
