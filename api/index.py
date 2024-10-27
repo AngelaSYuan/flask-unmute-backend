@@ -13,7 +13,7 @@ app = Flask(__name__)
 CORS(
     app,
     resources={
-        r"/*": {"origins": "http://localhost:8000", "supports_credentials": True}
+        r"/*": {"origins": "*", "supports_credentials": True}
     },
 )
 # CORS(app)  # Enable CORS for all routes!
@@ -30,30 +30,45 @@ def root():
 
 @app.route("/api/transcribe", methods=["POST"])
 def transcribe():
-    print("hi")
+    print("Transcription request received.")
+    
     API_KEY = os.getenv("API_KEY")
     if "video" not in request.files:
         return jsonify({"error": "No video file uploaded"}), 400
 
     video_file = request.files["video"]
+    
+    # Print the content type of the uploaded video file
+    print(f"Uploaded video content type: {video_file.content_type}")
+
+    # Create an in-memory bytes buffer for the video file
     video = io.BytesIO(video_file.read())
+    
+    # Automatically determine the filename and content type
+    filename = video_file.filename
+    mime_type = video_file.content_type
 
     try:
-        print(API_KEY)
+        print(f"Using API Key: {API_KEY}")
         url = "https://api.symphoniclabs.com/transcribe"
         files = {
-            "video": ("input.webm", video, "video/webm"),
+            'video': (filename, video, mime_type),  # Use the actual filename and MIME type
+            'tier': "fast",
             'api_key': (None, API_KEY),
         }
-        response = requests.post(url, files=files, timeout=30)  # Reasonable timeout
-        response.raise_for_status()  # Raise an error for bad responses
-        transcribed_text = response.json().get("transcription", "")
+        response = requests.post(url, files=files, timeout=300)
+        response.raise_for_status()
+        
+        # Get the transcribed text from the response
+        transcribed_text = response.json()
+        
+        # Log the transcription result
+        print(f"Transcription result: {transcribed_text}")
+        
         return jsonify({"transcription": transcribed_text})
-    except requests.exceptions.Timeout:
-        print("Request timed out")
-        return jsonify({"error": "Request to Symphonic Labs API timed out"}), 504
     except requests.exceptions.RequestException as e:
-        print(f"Error calling Symphonic Labs API: {e}")
+        print("Error calling Symphonic Labs API:")
+        print(e)
         return jsonify({"error": "Failed to transcribe video"}), 500
 
 
