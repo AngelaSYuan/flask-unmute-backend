@@ -4,8 +4,11 @@ import tempfile
 import subprocess
 import requests
 from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes!
+ 
 
 # Define your Symphonic Labs API key here or load it from environment variables
 API_KEY = os.getenv("API_KEY")  # Ensure this is set in your environment
